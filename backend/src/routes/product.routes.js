@@ -173,8 +173,8 @@ router.get('/:id/sales-history', protect, async (req, res) => {
   }
 });
 
-// Create product (Manager or Staff)
-router.post('/', protect, async (req, res) => {
+// Create product (Manager only)
+router.post('/', protect, restrictTo('manager'), async (req, res) => {
   try {
     const {
       name,
@@ -272,8 +272,8 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
-// Update product
-router.put('/:id', protect, async (req, res) => {
+// Update product (Manager only)
+router.put('/:id', protect, restrictTo('manager'), async (req, res) => {
   try {
     if (req.body.sku) {
       req.body.sku = req.body.sku.toUpperCase();

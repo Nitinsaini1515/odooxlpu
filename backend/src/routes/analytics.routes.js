@@ -4,11 +4,10 @@ const Product = require('../models/Product');
 const Stock = require('../models/Stock');
 const Order = require('../models/Order');
 const InventoryOperation = require('../models/InventoryOperation');
-const StockLedger = require('../models/StockLedger');
-const { protect } = require('../middleware/auth');
+const { protect, restrictTo } = require('../middleware/auth');
 
-// 1. DASHBOARD OVERVIEW STATS
-router.get('/dashboard', protect, async (req, res) => {
+// 1. DASHBOARD OVERVIEW STATS (Manager Only)
+router.get('/dashboard', protect, restrictTo('manager'), async (req, res) => {
   try {
     // 1. Stock counts
     const products = await Product.find({ isActive: true });
@@ -131,8 +130,71 @@ router.get('/dashboard', protect, async (req, res) => {
   }
 });
 
-// 2. SALES ANALYTICS
-router.get('/sales', protect, async (req, res) => {
+// STAFF OPERATIONS DASHBOARD (Operational metrics only, no financial sales/profit data)
+router.get('/staff-dashboard', protect, async (req, res) => {
+  try {
+    const products = await Product.find({ isActive: true });
+    const stocks = await Stock.find();
+
+    const productStockMap = {};
+    stocks.forEach((s) => {
+      const pid = s.product.toString();
+      productStockMap[pid] = (productStockMap[pid] || 0) + s.quantity;
+    });
+
+    let totalStockUnits = 0;
+    let lowStockCount = 0;
+    let outOfStockCount = 0;
+
+    products.forEach((p) => {
+      const qty = productStockMap[p._id.toString()] || 0;
+      totalStockUnits += qty;
+      if (qty === 0) outOfStockCount++;
+      else if (qty <= p.minStockLevel) lowStockCount++;
+    });
+
+    // Operational order counts
+    const pendingOrders = await Order.countDocuments({ status: 'pending' });
+    const confirmedOrders = await Order.countDocuments({ status: 'confirmed' }); // Awaiting Pick & Pack
+    const readyOrders = await Order.countDocuments({ status: 'ready' }); // Ready for dispatch
+    const pendingReceipts = await InventoryOperation.countDocuments({ type: 'receipt', status: { $in: ['pending', 'draft'] } });
+    
+    const recentOperations = await InventoryOperation.find()
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .populate('performedBy', 'name')
+      .populate('sourceWarehouse', 'name code')
+      .populate('destinationWarehouse', 'name code');
+
+    // Orders waiting for warehouse staff to pick & pack
+    const ordersToPack = await Order.find({ status: { $in: ['confirmed', 'ready'] } })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .populate('fulfillmentWarehouse', 'name code')
+      .populate('items.product', 'name sku category');
+
+    return res.json({
+      success: true,
+      stats: {
+        totalStockUnits,
+        totalSkus: products.length,
+        lowStockCount,
+        outOfStockCount,
+        pendingOrders,
+        confirmedOrdersToPack: confirmedOrders,
+        readyOrdersToDispatch: readyOrders,
+        pendingReceipts,
+      },
+      ordersToPack,
+      recentOperations,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 2. SALES ANALYTICS (Manager Only)
+router.get('/sales', protect, restrictTo('manager'), async (req, res) => {
   try {
     const orders = await Order.find({ status: { $ne: 'cancelled' } }).populate('items.product');
 
@@ -250,8 +312,8 @@ router.get('/sales', protect, async (req, res) => {
   }
 });
 
-// 3. PROFIT ANALYTICS
-router.get('/profit', protect, async (req, res) => {
+// 3. PROFIT ANALYTICS (Manager Only)
+router.get('/profit', protect, restrictTo('manager'), async (req, res) => {
   try {
     const orders = await Order.find({ status: { $in: ['confirmed', 'ready', 'delivered'] } }).populate('items.product');
 

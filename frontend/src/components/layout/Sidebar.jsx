@@ -11,40 +11,37 @@ import {
   TrendingUp,
   CircleDollarSign,
   BrainCircuit,
-  Lock,
   Boxes,
   X,
+  Shield,
+  User,
 } from 'lucide-react';
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { isManager, user } = useAuth();
 
-  const navLinks = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/products', label: 'Products & Stock', icon: Armchair },
-    { to: '/inventory/operations', label: 'Operations', icon: ArrowLeftRight, badge: 'In/Out' },
-    { to: '/inventory/ledger', label: 'Stock Ledger', icon: ClipboardList },
-    { to: '/warehouses', label: 'Warehouses', icon: Building2 },
-    { to: '/orders', label: 'Customer Orders', icon: ShoppingCart },
-    {
-      to: '/analytics/sales',
-      label: 'Sales Analytics',
-      icon: TrendingUp,
-      managerOnly: true,
-    },
-    {
-      to: '/analytics/profit',
-      label: 'Profit Analytics',
-      icon: CircleDollarSign,
-      managerOnly: true,
-    },
-    {
-      to: '/smart-insights',
-      label: 'Smart Insights',
-      icon: BrainCircuit,
-      badge: 'AI',
-    },
-  ];
+  // Role-filtered navigation links (unauthorized links are completely hidden)
+  const navLinks = isManager
+    ? [
+        { to: '/dashboard', label: 'Manager Dashboard', icon: LayoutDashboard },
+        { to: '/products', label: 'Products & Catalog', icon: Armchair },
+        { to: '/inventory/operations', label: 'Inventory Operations', icon: ArrowLeftRight, badge: 'In/Out' },
+        { to: '/inventory/ledger', label: 'Stock Ledger', icon: ClipboardList },
+        { to: '/warehouses', label: 'Warehouses & Matrix', icon: Building2 },
+        { to: '/orders', label: 'Customer Orders', icon: ShoppingCart },
+        { to: '/analytics/sales', label: 'Sales Analytics', icon: TrendingUp },
+        { to: '/analytics/profit', label: 'Profit Analytics', icon: CircleDollarSign },
+        { to: '/smart-insights', label: 'Smart Insights', icon: BrainCircuit, badge: 'AI' },
+      ]
+    : [
+        { to: '/staff/dashboard', label: 'Staff Operations', icon: LayoutDashboard },
+        { to: '/inventory/operations', label: 'Receipts & Transfers', icon: ArrowLeftRight, badge: 'Active' },
+        { to: '/orders', label: 'Pick & Pack Orders', icon: ShoppingCart },
+        { to: '/products', label: 'Warehouse Stock', icon: Armchair },
+        { to: '/inventory/ledger', label: 'Stock Ledger', icon: ClipboardList },
+        { to: '/warehouses', label: 'Location Matrix', icon: Building2 },
+        { to: '/smart-insights', label: 'Stockout Alerts', icon: BrainCircuit },
+      ];
 
   return (
     <>
@@ -85,12 +82,11 @@ export const Sidebar = ({ isOpen, onClose }) => {
         {/* Navigation list */}
         <div className="flex-1 py-4 px-3 overflow-y-auto space-y-1">
           <div className="px-3 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-            Menu Navigation
+            {isManager ? 'Manager ERP Menu' : 'Warehouse Staff Menu'}
           </div>
 
           {navLinks.map((item) => {
             const Icon = item.icon;
-            const isLocked = item.managerOnly && !isManager;
 
             return (
               <NavLink
@@ -102,7 +98,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
                     isActive
                       ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-semibold'
                       : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/80'
-                  } ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}`
+                  }`
                 }
               >
                 <div className="flex items-center gap-3">
@@ -110,14 +106,11 @@ export const Sidebar = ({ isOpen, onClose }) => {
                   <span>{item.label}</span>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  {item.badge && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-900 text-indigo-300 border border-indigo-700/50">
-                      {item.badge}
-                    </span>
-                  )}
-                  {isLocked && <Lock className="w-3 h-3 text-slate-500" title="Manager only" />}
-                </div>
+                {item.badge && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-900 text-indigo-300 border border-indigo-700/50">
+                    {item.badge}
+                  </span>
+                )}
               </NavLink>
             );
           })}
@@ -127,17 +120,17 @@ export const Sidebar = ({ isOpen, onClose }) => {
         <div className="p-4 border-t border-slate-800/80 bg-slate-950/40">
           <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
-              {isManager ? '👑' : '📦'}
+              {isManager ? <Shield className="w-4 h-4 text-amber-400" /> : <User className="w-4 h-4 text-emerald-400" />}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-200 truncate">{user?.name || 'Authorized User'}</p>
+              <p className="text-xs font-semibold text-slate-200 truncate">{user?.name || 'Staff User'}</p>
               <p className="text-[10px] text-indigo-400 font-medium">
-                {isManager ? 'Inventory Manager / Owner' : 'Warehouse Staff Member'}
+                {isManager ? 'Inventory Manager / Owner' : 'Warehouse Operations Staff'}
               </p>
             </div>
           </div>
           <p className="text-[10px] text-slate-500 text-center mt-3">
-            StockSense v1.0 • Jalandhar, Punjab
+            StockSense • Jalandhar Central
           </p>
         </div>
       </aside>

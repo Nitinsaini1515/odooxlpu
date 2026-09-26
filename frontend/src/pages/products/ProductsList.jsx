@@ -175,13 +175,15 @@ export const ProductsList = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-md shadow-indigo-600/20 transition flex items-center gap-2 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Product</span>
-        </button>
+        {isManager && (
+          <button
+            onClick={handleOpenAdd}
+            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-md shadow-indigo-600/20 transition flex items-center gap-2 self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Product</span>
+          </button>
+        )}
       </div>
 
       {/* Filter and Search Bar */}
@@ -239,9 +241,9 @@ export const ProductsList = () => {
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <th className="py-3 px-4">Product Info</th>
                 <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4 text-right">Cost Price</th>
+                {isManager && <th className="py-3 px-4 text-right">Cost Price</th>}
                 <th className="py-3 px-4 text-right">Selling Price</th>
-                <th className="py-3 px-4 text-right">Profit / Unit</th>
+                {isManager && <th className="py-3 px-4 text-right">Profit / Unit</th>}
                 <th className="py-3 px-4 text-center">Available Stock</th>
                 <th className="py-3 px-4 text-center">Reorder Level</th>
                 <th className="py-3 px-4 text-center">Status</th>
@@ -251,13 +253,13 @@ export const ProductsList = () => {
             <tbody className="divide-y divide-slate-100 text-xs">
               {loading ? (
                 <tr>
-                  <td colSpan="9" className="text-center py-12 text-slate-400">
+                  <td colSpan={isManager ? 9 : 7} className="text-center py-12 text-slate-400">
                     Loading products catalog...
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center py-12 text-slate-400">
+                  <td colSpan={isManager ? 9 : 7} className="text-center py-12 text-slate-400">
                     No products matched your criteria
                   </td>
                 </tr>
@@ -285,18 +287,22 @@ export const ProductsList = () => {
                         </span>
                       </td>
 
-                      <td className="py-3 px-4 text-right text-slate-600 font-medium">
-                        {formatCurrency(prod.purchasePrice)}
-                      </td>
+                      {isManager && (
+                        <td className="py-3 px-4 text-right text-slate-600 font-medium">
+                          {formatCurrency(prod.purchasePrice)}
+                        </td>
+                      )}
 
                       <td className="py-3 px-4 text-right font-bold text-slate-900">
                         {formatCurrency(prod.sellingPrice)}
                       </td>
 
-                      <td className="py-3 px-4 text-right">
-                        <div className="font-semibold text-emerald-600">{formatCurrency(profit)}</div>
-                        <div className="text-[10px] text-slate-400">{margin}% margin</div>
-                      </td>
+                      {isManager && (
+                        <td className="py-3 px-4 text-right">
+                          <div className="font-semibold text-emerald-600">{formatCurrency(profit)}</div>
+                          <div className="text-[10px] text-slate-400">{margin}% margin</div>
+                        </td>
+                      )}
 
                       <td className="py-3 px-4 text-center">
                         <span className="font-extrabold text-sm text-slate-900">{prod.totalStock}</span>
@@ -336,13 +342,15 @@ export const ProductsList = () => {
                           >
                             <History className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleOpenEdit(prod)}
-                            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition"
-                            title="Edit Product"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
+                          {isManager && (
+                            <button
+                              onClick={() => handleOpenEdit(prod)}
+                              className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                              title="Edit Product"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
                           {isManager && (
                             <button
                               onClick={() => handleDeleteProduct(prod._id, prod.name)}

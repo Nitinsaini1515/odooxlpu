@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('stocksense_token') || null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize user profile
+  // Initialize and verify user profile via JWT
   useEffect(() => {
     const initAuth = async () => {
       if (token) {
@@ -16,29 +16,19 @@ export const AuthProvider = ({ children }) => {
           const res = await api.auth.getMe();
           if (res.success) {
             setUser(res.user);
+          } else {
+            logout();
           }
         } catch (error) {
           console.warn('Session expired or invalid:', error.message);
           logout();
-        }
-      } else {
-        // Automatically default to manager demo login for first time view
-        try {
-          const res = await api.auth.demoLogin('manager');
-          if (res.success) {
-            localStorage.setItem('stocksense_token', res.token);
-            setToken(res.token);
-            setUser(res.user);
-          }
-        } catch (e) {
-          console.warn('Auto demo login skipped:', e.message);
         }
       }
       setLoading(false);
     };
 
     initAuth();
-  }, []);
+  }, [token]);
 
   const login = async (email, password) => {
     const res = await api.auth.login({ email, password });
@@ -70,14 +60,15 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
-  const switchRole = async (targetRole) => {
-    return await demoLogin(targetRole);
-  };
-
   const logout = () => {
     localStorage.removeItem('stocksense_token');
     setToken(null);
     setUser(null);
+  };
+
+  // Helper to determine role-based home destination
+  const getDashboardPath = (roleToTest = user?.role) => {
+    return roleToTest === 'manager' ? '/dashboard' : '/staff/dashboard';
   };
 
   return (
@@ -89,8 +80,8 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         demoLogin,
-        switchRole,
         logout,
+        getDashboardPath,
         isAuthenticated: !!token && !!user,
         isManager: user?.role === 'manager',
         isStaff: user?.role === 'staff',

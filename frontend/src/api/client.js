@@ -219,6 +219,11 @@ export const api = {
         headers: getAuthHeaders(),
       }).then(handleResponse),
 
+    getStaffDashboard: () =>
+      fetch(`${API_BASE}/analytics/staff-dashboard`, {
+        headers: getAuthHeaders(),
+      }).then(handleResponse),
+
     getSales: () =>
       fetch(`${API_BASE}/analytics/sales`, {
         headers: getAuthHeaders(),

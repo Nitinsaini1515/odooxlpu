@@ -22,8 +22,9 @@ export const Register = () => {
     setError('');
     setLoading(true);
     try {
-      await register(formData);
-      navigate('/dashboard');
+      const res = await register(formData);
+      const target = res.user.role === 'manager' ? '/dashboard' : '/staff/dashboard';
+      navigate(target);
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -157,6 +158,12 @@ export const Register = () => {
             Sign in
           </Link>
         </p>
+
+        <div className="mt-4 text-center">
+          <Link to="/" className="text-xs text-slate-400 hover:text-slate-200 transition">
+            ← Return to StockSense Home
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -17,8 +17,9 @@ export const Login = () => {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      navigate('/dashboard');
+      const res = await login(email, password);
+      const target = res.user.role === 'manager' ? '/dashboard' : '/staff/dashboard';
+      navigate(target);
     } catch (err) {
       setError(err.message || 'Login failed. Please check credentials.');
     } finally {
@@ -30,8 +31,9 @@ export const Login = () => {
     setError('');
     setLoading(true);
     try {
-      await demoLogin(role);
-      navigate('/dashboard');
+      const res = await demoLogin(role);
+      const target = res.user.role === 'manager' ? '/dashboard' : '/staff/dashboard';
+      navigate(target);
     } catch (err) {
       setError(err.message || 'Failed demo login');
     } finally {
@@ -152,6 +154,12 @@ export const Login = () => {
             Register new user
           </Link>
         </p>
+
+        <div className="mt-4 text-center">
+          <Link to="/" className="text-xs text-slate-400 hover:text-slate-200 transition">
+            ← Return to StockSense Home
+          </Link>
+        </div>
       </div>
     </div>
   );
